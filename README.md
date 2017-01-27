@@ -10,6 +10,7 @@ In-Memory Key/Value database based on radix tree with `Get` `Set` `Del` `Clr` co
 ```bash
 go get github.com/ahmdrz/simorgh
 ```
+*Note* GoGet error will fix as soon as possible (TODO) 
 
 ### Client
 
