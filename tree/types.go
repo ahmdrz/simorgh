@@ -1,7 +1,7 @@
 package tree
 
 import (
-	"gitlab.com/ahmdrz/simon/radix"
+	"github.com/ahmdrz/simorgh/radix"
 )
 
 type Tree struct {
