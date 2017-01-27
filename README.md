@@ -31,10 +31,6 @@ go build -i
 ./server -port=8080 -protocol=tcp
 ```
 
-```bash
-
-```
-
 ### TODO
 
 - [ ] Password authentication.
