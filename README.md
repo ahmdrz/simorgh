@@ -21,6 +21,23 @@ go build -i
 ./client -port=8080 -protocol=tcp -address=localhost
 ```
 
+
+Client program :
+
+```
+> set ahmad=reza
+< ahmad = reza
+> get ahmad
+< ahmad = reza
+> get test
+< test = UNDEFINED
+> del ahmad
+< ahmad REMOVED
+.
+.
+.
+```
+
 ### Server
 
 Simorgh server is in `server` directory. 
@@ -42,7 +59,7 @@ go build -i
 
 ### Contribute
 
-`Radix Tree` is forked from [arman](https://github.com/armon/go-radix) 
+`Radix Tree` is forked from [arman](https://github.com/armon/go-radix). 
 
 I'm not good in data structures , So I will happy if anyone give me suggestions and improve my code.
 
