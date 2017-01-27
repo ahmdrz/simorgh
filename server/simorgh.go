@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.com/ahmdrz/simon/tree"
+	"github.com/ahmdrz/simorgh/tree"
 )
 
 var simon struct {
