@@ -1,6 +1,10 @@
 # simorgh
 Simorgh (Phoenix in Persian) is a simple in-memory key/value database using radix tree.
 
+![Image of Simorgh from Wikipedia](https://upload.wikimedia.org/wikipedia/commons/4/43/Phoenix-Fabelwesen.jpg)
+
+Simorgh image from wikipedia
+
 ***
 
 In-Memory Key/Value database based on radix tree with `Get` `Set` `Del` `Clr` commands.
