@@ -1,6 +1,10 @@
 # simorgh
 Simorgh (Phoenix in Persian) is a simple in-memory key/value database using radix tree.
 
+![Image of Simorgh from Wikipedia](https://upload.wikimedia.org/wikipedia/commons/4/43/Phoenix-Fabelwesen.jpg)
+
+Simorgh image from wikipedia
+
 ***
 
 In-Memory Key/Value database based on radix tree with `Get` `Set` `Del` `Clr` commands.
@@ -10,7 +14,13 @@ In-Memory Key/Value database based on radix tree with `Get` `Set` `Del` `Clr` co
 ```bash
 go get github.com/ahmdrz/simorgh
 ```
-*Note* GoGet error will fix as soon as possible (TODO) 
+
+And for start simorgh server
+
+```bash
+cd $GOPATH/bin
+./simorgh -port=8080 -protocol=tcp
+```
 
 ### Client
 
@@ -21,7 +31,6 @@ cd $GOPATH/src/github.com/ahmdrz/simorgh/client
 go build -i
 ./client -port=8080 -protocol=tcp -address=localhost
 ```
-
 
 Client program :
 
@@ -37,16 +46,6 @@ Client program :
 .
 .
 .
-```
-
-### Server
-
-Simorgh server is in `server` directory. 
-
-```bash
-cd $GOPATH/src/github.com/ahmdrz/simorgh/server
-go build -i
-./server -port=8080 -protocol=tcp
 ```
 
 ### TODO
