@@ -8,15 +8,30 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ahmdrz/simorgh/tree"
+	"go-srp/src/srp"
+	"tree"
 )
 
-var simon struct {
+const SAFE_PRIME_BITS = 2048
+
+var DEFAULT_USERNAME = []byte("simorgh")
+var DEFAULT_PASSWORD = []byte("simorgh")
+
+var simorgh struct {
 	tree *tree.Tree
+	auth *Authentication
 }
 
 func init() {
-	simon.tree = tree.NewTree()
+	simorgh.tree = tree.NewTree()
+	Ih, salt, v, err := srp.Verifier(DEFAULT_USERNAME, DEFAULT_PASSWORD, SAFE_PRIME_BITS)
+	if err != nil {
+		panic(err)
+	}
+	simorgh.auth = InitAuthentication()
+	simorgh.auth.salt = salt
+	simorgh.auth.verifier = v
+	simorgh.auth.identityHash = Ih
 }
 
 func main() {
@@ -53,12 +68,49 @@ func handleRequest(conn net.Conn) {
 
 		if strings.HasPrefix(cmd, "{") && strings.HasSuffix(cmd, "}") {
 			cmd = cmd[1 : len(cmd)-1]
+			var key string = ""
+			if strings.Contains(cmd, "-&-") {
+				key = strings.Split(cmd, "-&-")[0]
+				cmd = cmd[strings.Index(cmd, "-&-")+3:]
+			}
+
+			if strings.HasPrefix(cmd, "--cred--") && strings.HasSuffix(cmd, "--cred--") {
+				creds := strings.Replace(cmd, "--cred--", "", -1)
+				I, A, err := srp.ServerBegin(creds)
+				s, err := srp.NewServer(I, simorgh.auth.salt, simorgh.auth.verifier, A, SAFE_PRIME_BITS)
+				if err != nil {
+					conn.Write([]byte("{--validate--0--validate--}\n"))
+					continue
+				}
+				simorgh.auth.keys[conn.RemoteAddr().String()] = s
+				s_creds := s.Credentials()
+				conn.Write([]byte("{--cred--" + s_creds + "--cred--}\n"))
+			} else if strings.HasPrefix(cmd, "--auth--") && strings.HasSuffix(cmd, "--auth--") {
+				auth := strings.Replace(cmd, "--auth--", "", -1)
+				s, ok := simorgh.auth.keys[conn.RemoteAddr().String()]
+				if !ok {
+					conn.Write([]byte("{--validate--0--validate--}\n"))
+					continue
+				}
+				proof, err := s.ClientOk(auth)
+				if err != nil {
+					conn.Write([]byte("{--validate--0--validate--}\n"))
+					continue
+				}
+				simorgh.auth.accepts[string(s.RawKey())] = true
+				conn.Write([]byte("{--proof--" + proof + "--proof--}\n"))
+			}
+
+			if _, valid := simorgh.auth.accepts[key]; !valid {
+				continue
+			}
+
 			if strings.HasPrefix(cmd, "set") {
 				cmd = strings.Replace(cmd, "set", "", -1)
 				cmd = strings.TrimSpace(cmd)
 				parts := strings.Split(cmd, "=")
 				if len(parts) == 2 {
-					simon.tree.Set(parts[0], parts[1])
+					simorgh.tree.Set(parts[0], parts[1])
 					conn.Write([]byte("{OK}\n"))
 				} else {
 					conn.Write([]byte("{INVALID}\n"))
@@ -66,15 +118,15 @@ func handleRequest(conn net.Conn) {
 			} else if strings.HasPrefix(cmd, "get") {
 				cmd = strings.Replace(cmd, "get", "", -1)
 				cmd = strings.TrimSpace(cmd)
-				value := simon.tree.Get(cmd)
+				value := simorgh.tree.Get(cmd)
 				conn.Write([]byte("{" + value + "}\n"))
 			} else if strings.HasPrefix(cmd, "del") {
 				cmd = strings.Replace(cmd, "del", "", -1)
 				cmd = strings.TrimSpace(cmd)
-				simon.tree.Del(cmd)
+				simorgh.tree.Del(cmd)
 				conn.Write([]byte("{OK}\n"))
 			} else if cmd == "clr" {
-				n := simon.tree.Clr()
+				n := simorgh.tree.Clr()
 				conn.Write([]byte("{MEMORY CLEARED (" + strconv.Itoa(n) + ")}\n"))
 			} else {
 				conn.Write([]byte("{INVALID}\n"))

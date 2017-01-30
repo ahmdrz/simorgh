@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"gopass"
 	"log"
-	"net"
 	"os"
+
+	"github.com/ahmdrz/simorgh/driver"
 	"strings"
 )
 
@@ -16,12 +18,23 @@ func main() {
 	proto := flag.String("protocol", "tcp", "Server net listen protocol")
 	flag.Parse()
 
-	conn, err := net.Dial(*proto, *addr+":"+*port)
+	var username string
+	fmt.Print("Username > ")
+	fmt.Scanf("%s", &username)
+	fmt.Printf("Password > ")
+
+	password, err := gopass.GetPasswd()
+	if err != nil {
+		fmt.Println("Cannot read input password")
+		os.Exit(-1)
+	}
+
+	si, err := simorgh.New(*addr+":"+*port, username, string(password), *proto)
 	if err != nil {
 		log.Println(err)
-		return
+		os.Exit(-3)
 	}
-	defer conn.Close()
+	defer si.Close()
 
 	for {
 		fmt.Print("< ")
@@ -29,18 +42,42 @@ func main() {
 		text, _ := reader.ReadString('\n')
 		text = text[:len(text)-1]
 		if text == "\\q" {
-			return
+			fmt.Println("bye")
+			os.Exit(0)
 		}
-		fmt.Fprintf(conn, "{"+text+"}\n")
-		message, _ := bufio.NewReader(conn).ReadString('\n')
-		message = strings.TrimSpace(message)
-
-		if strings.HasPrefix(message, "{") && strings.HasSuffix(message, "}") {
-			message = message[1 : len(message)-1]
-			fmt.Println("> " + message)
-		} else {
-			fmt.Println("> ERROR ON READING DATA")
-			return
+		if strings.HasPrefix(text, "set") {
+			text = text[3:]
+			parts := strings.Split(text, "=")
+			msg, err := si.Set(parts[0], parts[1])
+			if err != nil {
+				fmt.Println("> ERROR !", msg)
+			} else {
+				fmt.Println("> OK", msg)
+			}
+		} else if strings.HasPrefix(text, "get") {
+			text = text[3:]
+			msg, err := si.Get(text)
+			if err != nil {
+				fmt.Println("> ERROR !", msg)
+			} else {
+				fmt.Println("> OK", msg)
+			}
+		} else if text == "clr" {
+			msg, err := si.Clr()
+			if err != nil {
+				fmt.Println("> ERROR !", msg)
+			} else {
+				fmt.Println("> OK", msg)
+			}
+		} else if strings.HasPrefix(text, "del") {
+			text = text[3:]
+			msg, err := si.Del(text)
+			if err != nil {
+				fmt.Println("> ERROR !", msg)
+			} else {
+				fmt.Println("> OK", msg)
+			}
 		}
 	}
+	os.Exit(0)
 }

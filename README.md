@@ -1,6 +1,6 @@
 # Simorgh
 
-Simorgh (Phoenix in Persian) is a simple in-memory key/value database using radix tree.
+Simorgh (Phoenix in Persian) is a simple in-memory key/value database using radix tree. Protected by SRP authentication algorithm.
 
 ![Image of Simorgh from Wikipedia](https://upload.wikimedia.org/wikipedia/commons/4/43/Phoenix-Fabelwesen.jpg)
 
@@ -50,25 +50,64 @@ For more information :
 simrogh-client --help
 ```
 
+*Default Username is :* `simorgh`
+*Default Password is :* `simorgh`
+
 Client program :
 
 ```
-> set ahmad=reza
-< ahmad = reza
-> get ahmad
-< ahmad = reza
-> get test
-< test = UNDEFINED
-> del ahmad
-< ahmad REMOVED
-.
-.
-.
+Username > simorgh
+Password > 
+< set a=b
+> OK OK
+< get a
+> OK b
+< get b=c
+> ERROR ! UNDEFINED
+< get b
+> ERROR ! UNDEFINED
+< set b=c
+> OK OK
+< get b
+> OK c
+< del b
+> OK OK
+< clr
+> OK MEMORY CLEARED (1)
+< \q
+bye
+```
+
+### API
+
+You can use `simorgh` in your Golang program.
+After installation you can do some code like :
+
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ahmdrz/simorgh/driver"    
+)
+
+func main() {
+    si, err := simorgh.New("localhost:8080","simorgh","simorgh","tcp")
+	if err != nil {
+		panic(err)
+	}
+	defer si.Close()
+
+    fmt.Println(si.Set("a","b"))
+    fmt.Println(si.Get("a"))
+    fmt.Println(si.Clr())
+}
 ```
 
 ### TODO
 
-- [ ] Password authentication.
+- [x] Password authentication.
+- [ ] Save configuration file in encrypted text file.
 - [ ] Improve Simorgh Cli.
 - [ ] Build Simorgh Golang library.
 - [ ] Test with heavy dataset.

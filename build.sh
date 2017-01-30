@@ -12,7 +12,7 @@ trap rmtemp EXIT
 CURRENT="$(pwd)"
 SIMORGH="$TMP/src/github.com/ahmdrz/simorgh"
 
-export GOPATH="$TMP"
+export GOPATH="$TMP":$GOPATH
 for file in `find . -type f`; do
 	if [[ "$file" != "." && "$file" != ./.git* && "$file" != ./data* && "$file" != ./summitdb-* ]]; then
 		mkdir -p "$SIMORGH/$(dirname "${file}")"

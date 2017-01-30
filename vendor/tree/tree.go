@@ -1,7 +1,7 @@
 package tree
 
 import (
-	"github.com/ahmdrz/simorgh/tree/radix"
+	"tree/radix"
 )
 
 func NewTree() *Tree {
