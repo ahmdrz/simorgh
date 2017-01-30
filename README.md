@@ -12,24 +12,41 @@ In-Memory Key/Value database based on radix tree with `Get` `Set` `Del` `Clr` co
 ### Download
 
 ```bash
-go get github.com/ahmdrz/simorgh
+git clone https://github.com/ahmdrz/simorgh
+cd simorgh
+make
 ```
 
-And for start simorgh server
+And for install simrogh
 
 ```bash
-cd $GOPATH/bin
-./simorgh -port=8080 -protocol=tcp
+sudo make install
+```
+
+### Running server
+
+```bash
+simrogh-server
+```
+
+Note that default port is 8080 and default protocol is tcp , you can pass `-port` and `-protocol` to `simorgh-server`
+
+For more information :
+
+```bash
+simrogh-server --help
 ```
 
 ### Client
 
-example of client connection in `client` directory
+```bash
+simorgh-client
+```
+
+For more information :
 
 ```bash
-cd $GOPATH/src/github.com/ahmdrz/simorgh/client
-go build -i
-./client -port=8080 -protocol=tcp -address=localhost
+simrogh-client --help
 ```
 
 Client program :
