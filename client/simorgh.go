@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -32,6 +33,14 @@ func main() {
 		}
 		fmt.Fprintf(conn, "{"+text+"}\n")
 		message, _ := bufio.NewReader(conn).ReadString('\n')
-		fmt.Println("> " + message[:len(message)-1])
+		message = strings.TrimSpace(message)
+
+		if strings.HasPrefix(message, "{") && strings.HasSuffix(message, "}") {
+			message = message[1 : len(message)-1]
+			fmt.Println("> " + message)
+		} else {
+			fmt.Println("> ERROR ON READING DATA")
+			return
+		}
 	}
 }

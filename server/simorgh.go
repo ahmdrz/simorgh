@@ -59,28 +59,28 @@ func handleRequest(conn net.Conn) {
 				parts := strings.Split(cmd, "=")
 				if len(parts) == 2 {
 					simon.tree.Set(parts[0], parts[1])
-					conn.Write([]byte(parts[0] + " = " + parts[1] + "\n"))
+					conn.Write([]byte("{OK}\n"))
 				} else {
-					conn.Write([]byte("INVALID\n"))
+					conn.Write([]byte("{INVALID}\n"))
 				}
 			} else if strings.HasPrefix(cmd, "get") {
 				cmd = strings.Replace(cmd, "get", "", -1)
 				cmd = strings.TrimSpace(cmd)
 				value := simon.tree.Get(cmd)
-				conn.Write([]byte(cmd + " = " + value + "\n"))
+				conn.Write([]byte("{" + value + "}\n"))
 			} else if strings.HasPrefix(cmd, "del") {
 				cmd = strings.Replace(cmd, "del", "", -1)
 				cmd = strings.TrimSpace(cmd)
 				simon.tree.Del(cmd)
-				conn.Write([]byte(cmd + " REMOVED\n"))
+				conn.Write([]byte("{OK}\n"))
 			} else if cmd == "clr" {
 				n := simon.tree.Clr()
-				conn.Write([]byte("MEMORY CLEARED (" + strconv.Itoa(n) + ")\n"))
+				conn.Write([]byte("{MEMORY CLEARED (" + strconv.Itoa(n) + ")}\n"))
 			} else {
-				conn.Write([]byte("INVALID\n"))
+				conn.Write([]byte("{INVALID}\n"))
 			}
 		} else {
-			conn.Write([]byte("INVALID\n"))
+			conn.Write([]byte("{INVALID}\n"))
 		}
 	}
 }

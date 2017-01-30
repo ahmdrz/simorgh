@@ -1,4 +1,5 @@
-# simorgh
+# Simorgh
+
 Simorgh (Phoenix in Persian) is a simple in-memory key/value database using radix tree.
 
 ![Image of Simorgh from Wikipedia](https://upload.wikimedia.org/wikipedia/commons/4/43/Phoenix-Fabelwesen.jpg)
@@ -76,7 +77,7 @@ Client program :
 
 ### Contribute
 
-`Radix Tree` is forked from [arman](https://github.com/armon/go-radix). 
+`Radix Tree` is forked from [armon](https://github.com/armon/go-radix). 
 
 I'm not good in data structures , So I will happy if anyone give me suggestions and improve my code.
 
