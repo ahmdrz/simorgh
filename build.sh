@@ -14,7 +14,7 @@ SIMORGH="$TMP/src/github.com/ahmdrz/simorgh"
 
 export GOPATH="$TMP":$GOPATH
 for file in `find . -type f`; do
-	if [[ "$file" != "." && "$file" != ./.git* && "$file" != ./data* && "$file" != ./summitdb-* ]]; then
+	if [[ "$file" != "." && "$file" != ./.git* ]]; then
 		mkdir -p "$SIMORGH/$(dirname "${file}")"
 		cp -P "$file" "$SIMORGH/$(dirname "${file}")"
 	fi
