@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+export GO15VENDOREXPERIMENT=1
 
 TMP="$(mktemp -d -t simorgh.XXXX)"
 

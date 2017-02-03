@@ -2,11 +2,13 @@ package main
 
 import (
 	"go-srp/src/srp"
+	"sync"
 )
 
 type Authentication struct {
+	mutex        sync.Mutex
 	keys         map[string]*srp.Server
-	accepts      map[string]bool
+	accepts      map[string]int64
 	salt         []byte
 	verifier     []byte
 	identityHash []byte
@@ -15,6 +17,6 @@ type Authentication struct {
 func InitAuthentication() *Authentication {
 	return &Authentication{
 		keys:    make(map[string]*srp.Server),
-		accepts: make(map[string]bool),
+		accepts: make(map[string]int64),
 	}
 }

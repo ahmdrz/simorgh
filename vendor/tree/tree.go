@@ -14,12 +14,12 @@ func (t *Tree) Del(key string) {
 	t.tree.Delete(key)
 }
 
-func (t *Tree) Get(key string) string {
-	br, exists := t.tree.Get(key)
+func (t *Tree) Get(key string) (string, string) {
+	br, exists, mode := t.tree.Get(key)
 	if exists {
-		return br.(string)
+		return br.(string), mode
 	}
-	return "UNDEFINED"
+	return "UNDEFINED", radix.UNDEFIEND
 }
 
 func (t *Tree) Clr() int {

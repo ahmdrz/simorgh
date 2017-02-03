@@ -2,17 +2,20 @@ package main
 
 import (
 	"bufio"
+	"encoding/base64"
 	"flag"
 	"log"
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	"go-srp/src/srp"
 	"tree"
 )
 
 const SAFE_PRIME_BITS = 2048
+const LIMIT_TIME = 600
 
 var DEFAULT_USERNAME = []byte("simorgh")
 var DEFAULT_PASSWORD = []byte("simorgh")
@@ -45,6 +48,8 @@ func main() {
 		return
 	}
 
+	go removeUnusedRequests()
+
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
@@ -54,6 +59,17 @@ func main() {
 
 		go handleRequest(conn)
 	}
+}
+
+func removeUnusedRequests() {
+	simorgh.auth.mutex.Lock()
+	for key, value := range simorgh.auth.accepts {
+		if value+LIMIT_TIME < time.Now().Unix() {
+			delete(simorgh.auth.accepts, key)
+		}
+	}
+	simorgh.auth.mutex.Unlock()
+	time.AfterFunc(5*time.Second, removeUnusedRequests)
 }
 
 func handleRequest(conn net.Conn) {
@@ -82,7 +98,9 @@ func handleRequest(conn net.Conn) {
 					conn.Write([]byte("{--validate--0--validate--}\n"))
 					continue
 				}
+				simorgh.auth.mutex.Lock()
 				simorgh.auth.keys[conn.RemoteAddr().String()] = s
+				simorgh.auth.mutex.Unlock()
 				s_creds := s.Credentials()
 				conn.Write([]byte("{--cred--" + s_creds + "--cred--}\n"))
 			} else if strings.HasPrefix(cmd, "--auth--") && strings.HasSuffix(cmd, "--auth--") {
@@ -97,11 +115,21 @@ func handleRequest(conn net.Conn) {
 					conn.Write([]byte("{--validate--0--validate--}\n"))
 					continue
 				}
-				simorgh.auth.accepts[string(s.RawKey())] = true
+				simorgh.auth.mutex.Lock()
+				delete(simorgh.auth.keys, conn.RemoteAddr().String())
+				var session []byte = s.RawKey()
+				var _session []byte = make([]byte, base64.StdEncoding.EncodedLen(len(session)))
+				base64.StdEncoding.Encode(_session, session)
+				simorgh.auth.accepts[string(_session)] = time.Now().Unix()
+				simorgh.auth.mutex.Unlock()
 				conn.Write([]byte("{--proof--" + proof + "--proof--}\n"))
 			}
 
-			if _, valid := simorgh.auth.accepts[key]; !valid {
+			if _, valid := simorgh.auth.accepts[key]; valid {
+				simorgh.auth.mutex.Lock()
+				simorgh.auth.accepts[key] = time.Now().Unix()
+				simorgh.auth.mutex.Unlock()
+			} else {
 				continue
 			}
 
@@ -118,8 +146,8 @@ func handleRequest(conn net.Conn) {
 			} else if strings.HasPrefix(cmd, "get") {
 				cmd = strings.Replace(cmd, "get", "", -1)
 				cmd = strings.TrimSpace(cmd)
-				value := simorgh.tree.Get(cmd)
-				conn.Write([]byte("{" + value + "}\n"))
+				value, mode := simorgh.tree.Get(cmd)
+				conn.Write([]byte("{" + value + "-mode:" + mode + "}\n"))
 			} else if strings.HasPrefix(cmd, "del") {
 				cmd = strings.Replace(cmd, "del", "", -1)
 				cmd = strings.TrimSpace(cmd)

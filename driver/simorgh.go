@@ -2,6 +2,7 @@ package simorgh
 
 import (
 	"bufio"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"strings"
@@ -9,7 +10,7 @@ import (
 
 type Simorgh struct {
 	conn net.Conn
-	key  []byte
+	key  string
 }
 
 func New(address, username, password, proto string) (*Simorgh, error) {
@@ -21,9 +22,11 @@ func New(address, username, password, proto string) (*Simorgh, error) {
 	if err != nil {
 		return nil, err
 	}
+	var _session []byte = make([]byte, base64.StdEncoding.EncodedLen(len(session)))
+	base64.StdEncoding.Encode(_session, session)
 	return &Simorgh{
 		conn: conn,
-		key:  session,
+		key:  string(_session),
 	}, nil
 }
 

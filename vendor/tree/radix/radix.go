@@ -10,6 +10,12 @@ import (
 	"strings"
 )
 
+const (
+	NORMAL    = "normal"
+	JSON      = "json"
+	UNDEFIEND = "undefiend"
+)
+
 // WalkFn is used when walking the tree. Takes a
 // key and value, returning if iteration should
 // be terminated.
@@ -17,8 +23,9 @@ type WalkFn func(s string, v interface{}) bool
 
 // leafNode is used to represent a value
 type leafNode struct {
-	key string
-	val interface{}
+	key  string
+	val  interface{}
+	mode string
 }
 
 // edge is used to represent an edge node
@@ -149,7 +156,13 @@ func longestPrefix(k1, k2 string) int {
 
 // Insert is used to add a newentry or update
 // an existing entry. Returns if updated.
-func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
+func (t *Tree) Insert(s string, v interface{}, m ...string) (interface{}, bool) {
+	mode := NORMAL
+	if len(m) > 0 {
+		if m[0] == JSON {
+			mode = JSON
+		}
+	}
 	var parent *node
 	n := t.root
 	search := s
@@ -163,8 +176,9 @@ func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
 			}
 
 			n.leaf = &leafNode{
-				key: s,
-				val: v,
+				key:  s,
+				val:  v,
+				mode: mode,
 			}
 			t.size++
 			return nil, false
@@ -180,8 +194,9 @@ func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
 				label: search[0],
 				node: &node{
 					leaf: &leafNode{
-						key: s,
-						val: v,
+						key:  s,
+						val:  v,
+						mode: mode,
 					},
 					prefix: search,
 				},
@@ -217,8 +232,9 @@ func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
 
 		// Create a new leaf node
 		leaf := &leafNode{
-			key: s,
-			val: v,
+			key:  s,
+			val:  v,
+			mode: mode,
 		}
 
 		// If the new key is a subset, add to to this node
@@ -307,14 +323,14 @@ func (n *node) mergeChild() {
 
 // Get is used to lookup a specific key, returning
 // the value and if it was found
-func (t *Tree) Get(s string) (interface{}, bool) {
+func (t *Tree) Get(s string) (interface{}, bool, string) {
 	n := t.root
 	search := s
 	for {
 		// Check for key exhaution
 		if len(search) == 0 {
 			if n.isLeaf() {
-				return n.leaf.val, true
+				return n.leaf.val, true, n.leaf.mode
 			}
 			break
 		}
@@ -332,12 +348,16 @@ func (t *Tree) Get(s string) (interface{}, bool) {
 			break
 		}
 	}
-	return nil, false
+	return nil, false, UNDEFIEND
 }
 
-// Get is used to lookup a specific key, returning
-// the value and if it was found
-func (t *Tree) Set(s string, val interface{}) (interface{}, bool) {
+func (t *Tree) Set(s string, val interface{}, m ...string) (interface{}, bool) {
+	mode := NORMAL
+	if len(m) > 0 {
+		if m[0] == JSON {
+			mode = JSON
+		}
+	}
 	n := t.root
 	search := s
 	for {
@@ -345,6 +365,7 @@ func (t *Tree) Set(s string, val interface{}) (interface{}, bool) {
 		if len(search) == 0 {
 			if n.isLeaf() {
 				n.leaf.val = val
+				n.leaf.mode = mode
 				return n.leaf.val, true
 			}
 			break
