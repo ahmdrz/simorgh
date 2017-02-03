@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log"
 	"net"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,7 +17,7 @@ import (
 )
 
 const SAFE_PRIME_BITS = 2048
-const LIMIT_TIME = 600
+const LIMIT_TIME = 6
 const MAX_CONNECTION = 3
 
 var DEFAULT_USERNAME = []byte("simorgh")
@@ -33,6 +34,8 @@ var connections struct {
 }
 
 func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	simorgh.tree = tree.NewTree()
 	Ih, salt, v, err := srp.Verifier(DEFAULT_USERNAME, DEFAULT_PASSWORD, SAFE_PRIME_BITS)
 	if err != nil {
@@ -141,8 +144,6 @@ func handleRequest(conn net.Conn) {
 				simorgh.auth.mutex.Lock()
 				simorgh.auth.accepts[key] = time.Now().Unix()
 				simorgh.auth.mutex.Unlock()
-			} else {
-				continue
 			}
 
 			if strings.HasPrefix(cmd, "set") {
@@ -159,7 +160,7 @@ func handleRequest(conn net.Conn) {
 				cmd = strings.Replace(cmd, "get", "", -1)
 				cmd = strings.TrimSpace(cmd)
 				value, mode := simorgh.tree.Get(cmd)
-				conn.Write([]byte("{" + value + "-mode:" + mode + "}\n"))
+				conn.Write([]byte("{" + value.(string) + "-mode:" + mode + "}\n"))
 			} else if strings.HasPrefix(cmd, "del") {
 				cmd = strings.Replace(cmd, "del", "", -1)
 				cmd = strings.TrimSpace(cmd)

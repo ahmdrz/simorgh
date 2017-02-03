@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 )
 
 type Simorgh struct {
@@ -52,15 +53,29 @@ func (s *Simorgh) Clr() (string, error) {
 }
 
 func (s *Simorgh) send(cmd string) (string, error) {
-	s.conn.Write([]byte("{" + string(s.key) + "-&-" + cmd + "}\n"))
-	reader := bufio.NewReader(s.conn)
-	text, _ := reader.ReadString('\n')
-	text = text[:len(text)-1]
-	if strings.HasPrefix(text, "{") && strings.HasSuffix(text, "}") {
-		text = text[1 : len(text)-1]
-		if text == "INVALID" || text == "UNDEFINED" {
-			return text, fmt.Errorf("(INVALID or UNDEFINED) SEND REQUEST")
-		}
+	type Invalid struct {
+		Text  string
+		Error error
 	}
-	return text, nil
+	invalid := make(chan Invalid, 1)
+	go func() {
+		s.conn.Write([]byte("{" + string(s.key) + "-&-" + cmd + "}\n"))
+		reader := bufio.NewReader(s.conn)
+		text, _ := reader.ReadString('\n')
+		text = text[:len(text)-1]
+		if strings.HasPrefix(text, "{") && strings.HasSuffix(text, "}") {
+			text = text[1 : len(text)-1]
+			if text == "INVALID" || text == "UNDEFINED" {
+				invalid <- Invalid{Text: text, Error: fmt.Errorf("(INVALID or UNDEFINED) SEND REQUEST")}
+			}
+		}
+		invalid <- Invalid{Text: text, Error: nil}
+	}()
+
+	select {
+	case result := <-invalid:
+		return result.Text, result.Error
+	case <-time.After(10 * time.Second):
+		return "TIMEOUT", fmt.Errorf("REQUEST_TIME_OUT")
+	}
 }
