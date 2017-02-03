@@ -8,6 +8,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go-srp/src/srp"
@@ -16,6 +17,7 @@ import (
 
 const SAFE_PRIME_BITS = 2048
 const LIMIT_TIME = 600
+const MAX_CONNECTION = 3
 
 var DEFAULT_USERNAME = []byte("simorgh")
 var DEFAULT_PASSWORD = []byte("simorgh")
@@ -23,6 +25,11 @@ var DEFAULT_PASSWORD = []byte("simorgh")
 var simorgh struct {
 	tree *tree.Tree
 	auth *Authentication
+}
+
+var connections struct {
+	sync.Mutex
+	count int
 }
 
 func init() {
@@ -57,7 +64,12 @@ func main() {
 			continue
 		}
 
-		go handleRequest(conn)
+		connections.Lock()
+		if connections.count < MAX_CONNECTION {
+			go handleRequest(conn)
+			connections.count++
+		}
+		connections.Unlock()
 	}
 }
 
@@ -156,6 +168,14 @@ func handleRequest(conn net.Conn) {
 			} else if cmd == "clr" {
 				n := simorgh.tree.Clr()
 				conn.Write([]byte("{MEMORY CLEARED (" + strconv.Itoa(n) + ")}\n"))
+			} else if cmd == "exit" {
+				connections.Lock()
+				connections.count--
+				connections.Unlock()
+				simorgh.auth.mutex.Lock()
+				delete(simorgh.auth.accepts, key)
+				simorgh.auth.mutex.Unlock()
+				conn.Write([]byte("{BYE}\n"))
 			} else {
 				conn.Write([]byte("{INVALID}\n"))
 			}

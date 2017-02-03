@@ -31,6 +31,7 @@ func New(address, username, password, proto string) (*Simorgh, error) {
 }
 
 func (s *Simorgh) Close() error {
+	s.send("exit")
 	return s.conn.Close()
 }
 

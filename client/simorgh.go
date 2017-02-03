@@ -42,6 +42,7 @@ func main() {
 		text, _ := reader.ReadString('\n')
 		text = text[:len(text)-1]
 		if text == "\\q" {
+			si.Close()
 			fmt.Println("bye")
 			os.Exit(0)
 		}
