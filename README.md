@@ -1,6 +1,7 @@
 # Simorgh
+> It was my very very old golang-codes. So it maybe has a lot of bugs or bad written codes!
 
-# Under Construction :)
+### Under Construction :)
 
 Simorgh (Phoenix in Persian) is a simple in-memory key/value database using radix tree. Protected by SRP authentication algorithm.
 
